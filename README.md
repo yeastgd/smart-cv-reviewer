@@ -34,3 +34,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+```.next/``` — автогенерируемая папка, Next.js собирает сюда готовый код при запуске. Никогда не трогаешь руками.
+
+```node_modules/``` — все установленные библиотеки. Тоже не трогаешь, и в Git не пушишь (он уже в ```.gitignore```).
+
+```public/``` — статичные файлы: картинки, иконки, шрифты. Всё что здесь лежит доступно напрямую по URL. Эти SVG-шки от Next.js нам не нужны — можешь их удалить.
+
+```src/app/``` — это самое важное. Здесь живёт твоё приложение:
+
+- ```page.js``` — это главная страница (/), то что видит пользователь
+- ```layout.js``` — обёртка вокруг всех страниц (навбар, футер, общие стили)
+- ```globals.css``` — глобальные стили
+- ```favicon.ico``` — иконка вкладки браузера
+
+Конфиги в корне:
+
+- ```next.config.mjs``` — настройки Next.js
+- ```tailwind.config.js``` — настройки Tailwind
+- ```package.json``` — список зависимостей проекта
+- ```.gitignore``` — что не пушить в Git
+- ```eslint.config.mjs``` — проверка кода на ошибки

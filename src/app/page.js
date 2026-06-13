@@ -1,65 +1,117 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import styles from "./page.module.css";
 
 export default function Home() {
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    setResult(null);
+  };
+
+  const handleSubmit = async () => {
+    if (!file) return;
+    setLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result.split(",")[1];
+        const response = await fetch("/api/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfBase64: base64 }),
+        });
+        const data = await response.json();
+        setResult(data);
+        setLoading(false);
+      };
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className={styles.page}>
+      <div className={styles.header}>
+        <h1>Smart CV Reviewer</h1>
+        <p>Upload your CV and get instant AI-powered feedback</p>
+      </div>
+
+      <div className={styles.uploadZone}>
+        <label className={styles.uploadLabel}>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className={styles.hiddenInput}
+          />
+          {file ? (
+            <span className={styles.filename}>📄 {file.name}</span>
+          ) : (
+            <span className={styles.uploadHint}>Drop your PDF here or click to browse</span>
+          )}
+        </label>
+        <button
+          className={styles.btn}
+          onClick={handleSubmit}
+          disabled={!file || loading}
+        >
+          {loading ? "Analysing..." : "Analyse CV"}
+        </button>
+      </div>
+
+      {result && (
+        <div className={styles.results}>
+          <div className={styles.scoreCard}>
+            <div className={styles.scoreCircle}>{result.score}</div>
+            <div className={styles.scoreInfo}>
+              <h2>Overall score</h2>
+              <p>{result.summary}</p>
+            </div>
+          </div>
+
+          <div className={styles.sectionsGrid}>
+            {Object.entries(result.sections).map(([key, section]) => (
+              <div key={key} className={styles.sectionCard}>
+                <div className={styles.sectionLabel}>{key}</div>
+                <div className={styles.sectionScore}>{section.score}</div>
+                <div className={styles.progress}>
+                  <div
+                    className={styles.progressFill}
+                    style={{ width: `${section.score}%` }}
+                  />
+                </div>
+                <div className={styles.sectionFeedback}>{section.feedback}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.card}>
+            <h3>Top improvements</h3>
+            {result.top_improvements.map((item, i) => (
+              <div key={i} className={styles.improvementItem}>
+                <div className={styles.improvementNum}>{i + 1}</div>
+                <p>{item}</p>
+              </div>
+            ))}
+          </div>
+
+          {result.red_flags.length > 0 && (
+            <div className={styles.redFlags}>
+              <h3>⚠ Things to watch</h3>
+              {result.red_flags.map((flag, i) => (
+                <p key={i}>{flag}</p>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
